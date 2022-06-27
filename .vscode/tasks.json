@@ -1,0 +1,79 @@
+// tasks.json
+{
+    "version": "2.0.0",
+    // Read some settings from .vscode\settings.ini and define corresponding command variables.
+    // IMPORTANT: This requires the VS code extension 'Command Variable'.
+    "inputs": [
+        {
+            "id": "SSH-DESTINATION",
+            "type": "command",
+            "command": "extension.commandvariable.file.content",
+            "args": {
+                "fileName": "${workspaceFolder}\\.vscode\\settings.ini",
+                "key": "SSH-DESTINATION",
+                "default": "pi@raspberrypi.local"
+            }
+        }
+    ],
+    // Task pi-build-and-deploy executes tasks pi-build, pi-mkdir, pi-deploy, pi-chmod in this sequence.
+    "tasks": [
+        {
+            "label": "pi-build-and-deploy",
+            "dependsOn": ["pi-build", "pi-mkdir", "pi-deploy", "pi-chmod"],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "pi-build",
+            "command": "dotnet",
+            "type": "process",
+            "problemMatcher": "$msCompile",
+            "args": [
+                "publish",
+                "--runtime",
+                "linux-arm",
+                "--no-self-contained"
+            ],
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "pi-mkdir",
+            "command": "powershell",
+            "type": "shell",
+            "args": [
+                "ssh '${input:SSH-DESTINATION}' \"mkdir --parents ~/${workspaceFolderBasename}\""
+            ],
+        },
+        {
+            "label": "pi-deploy",
+            "command": "powershell",
+            "type": "process",
+            "args": [
+                "$DestDir = '${input:SSH-DESTINATION}' + ':~/' + '${workspaceFolderBasename}';",
+                "scp -r .\\bin\\Debug\\net6.0\\linux-arm\\publish\\* $DestDir"
+            ],
+        },
+        {
+            "label": "pi-chmod",
+            "command": "powershell",
+            "type": "shell",
+            "args": [
+                "ssh '${input:SSH-DESTINATION}' \"chmod 755 ~/${workspaceFolderBasename}/${workspaceFolderBasename}\""
+            ],
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "${workspaceFolder}/iot-raspi-mqtt-02.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        }        
+    ]
+}

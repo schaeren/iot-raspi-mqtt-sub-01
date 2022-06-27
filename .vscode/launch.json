@@ -1,0 +1,74 @@
+// launch.json
+{
+    "version": "0.2.0",
+    // Read some settings from .vscode\settings.ini and define corresponding command variables.
+    // IMPORTANT: This requires the VS code extension 'Command Variable'.
+    "inputs": [
+        {
+            "id": "SSH-DESTINATION",
+            "type": "command",
+            "command": "extension.commandvariable.file.content",
+            "args": {
+                "fileName": "${workspaceFolder}\\.vscode\\settings.ini",
+                "key": "SSH-DESTINATION",
+                "default": "pi@raspberrypi.local"
+            }
+        },
+        {
+            "id": "SSH-COMMAND",
+            "type": "command",
+            "command": "extension.commandvariable.file.content",
+            "args": {
+                "fileName": "${workspaceFolder}\\.vscode\\settings.ini",
+                "key": "SSH-COMMAND",
+                "default": ""
+            }
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Build, deploy, launch on Pi",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "pi-build-and-deploy",
+            // Path to the application's executable file on the target (Raspberry Pi)
+            "program": "~/${workspaceFolderBasename}/${workspaceFolderBasename}",   
+            "args": [],
+            // Path to the working directory for the application
+            "cwd": "~/${workspaceFolderBasename}",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}",
+                // Path to the SSH utility
+                "pipeProgram": "${input:SSH-COMMAND}",
+                "pipeArgs": [
+                    // username and hostname/IP address to be used to access the target using SSH
+                    "${input:SSH-DESTINATION}"
+                ],
+                "debuggerPath": "~/vsdbg/vsdbg"
+            }
+        },
+        {
+            "name": "Launch on Pi",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "~/${workspaceFolderBasename}/${workspaceFolderBasename}",   
+            "args": [],
+            // Path to the working directory for the application
+            "cwd": "~/${workspaceFolderBasename}",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}",
+                // Path to the SSH utility
+                "pipeProgram": "${input:SSH-COMMAND}",
+                "pipeArgs": [
+                    // username and hostname/IP address to be used to access the target using SSH
+                    "${input:SSH-DESTINATION}" 
+                ],
+                "debuggerPath": "~/vsdbg/vsdbg"
+            }
+        }
+    ]
+}
