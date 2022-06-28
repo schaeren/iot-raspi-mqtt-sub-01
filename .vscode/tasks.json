@@ -5,6 +5,16 @@
     // IMPORTANT: This requires the VS code extension 'Command Variable'.
     "inputs": [
         {
+            "id": "TARGET-ARCHITECTURE",
+            "type": "command",
+            "command": "extension.commandvariable.file.content",
+            "args": {
+                "fileName": "${workspaceFolder}\\.vscode\\settings.ini",
+                "key": "TARGET-ARCHITECTURE",
+                "default": "linux-arm"
+            }
+        },
+        {
             "id": "SSH-DESTINATION",
             "type": "command",
             "command": "extension.commandvariable.file.content",
@@ -30,7 +40,7 @@
             "args": [
                 "publish",
                 "--runtime",
-                "linux-arm",
+                "${input:TARGET-ARCHITECTURE}",
                 "--no-self-contained"
             ],
             "presentation": {
@@ -50,8 +60,9 @@
             "command": "powershell",
             "type": "process",
             "args": [
+                "$SrcDir = '.\\bin\\Debug\\net6.0\\${input:TARGET-ARCHITECTURE}\\publish\\*';",
                 "$DestDir = '${input:SSH-DESTINATION}' + ':~/' + '${workspaceFolderBasename}';",
-                "scp -r .\\bin\\Debug\\net6.0\\linux-arm\\publish\\* $DestDir"
+                "scp -r $SrcDir $DestDir"
             ],
         },
         {
